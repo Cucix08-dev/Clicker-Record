@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Game Timer + Score</title>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #222;
+        color: white;
+        text-align: center;
+        padding: 40px 10px 80px 10px; /* più spazio sotto */
+    }
+
+    h2 {
+        margin: 20px 0;
+        font-size: 1.8rem;
+    }
+
+    #buttons-container {
+        margin-top: 40px;
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        flex-wrap: nowrap;
+        width: 100%;
+        overflow-x: auto;
+        padding: 10px 0;
+    }
+
+    .orange-btn {
+        width: 65px;
+        height: 65px;
+        border-radius: 50%;
+        border: none;
+        background: orange;
+        color: black;
+        font-size: 1.2rem;
+        cursor: pointer;
+        transition: transform 0.1s;
+        flex-shrink: 0;
+        touch-action: manipulation; /* migliora multitouch */
+    }
+
+    .orange-btn:active {
+        transform: scale(0.9);
+    }
+
+    #startBtn {
+        margin-top: 70px; /* più in basso */
+        padding: 18px 50px;
+        background: #00b7ff;
+        border: none;
+        border-radius: 40px;
+        font-size: 1.6rem;
+        cursor: pointer;
+        touch-action: manipulation;
+    }
+
+    #startBtn:active {
+        transform: scale(0.95);
+    }
+
+    #timer1 {
+        font-size: 2rem;
+        margin-top: 25px;
+        color: #ffcc00;
+        min-height: 40px;
+    }
+
+    /* Mobile ultra small */
+    @media (max-width: 480px) {
+        .orange-btn {
+            width: 60px;
+            height: 60px;
+            font-size: 1.1rem;
+        }
+
+        #startBtn {
+            width: 95%;
+            font-size: 1.4rem;
+        }
+    }
+</style>
+</head>
+<body>
+
+<h2>SCORE: <span id="score">0</span></h2>
+
+<h2>TIMER: <span id="timer2">0</span></h2>
+
+<div id="timer1"></div>
+
+<div id="buttons-container">
+    <input type="submit" class="orange-btn" value="A" id="btnA">
+    <input type="submit" class="orange-btn" value="B" id="btnB">
+    <input type="submit" class="orange-btn" value="C" id="btnC">
+    <input type="submit" class="orange-btn" value="D" id="btnD">
+</div>
+
+<button id="startBtn">START</button>
+
+<script>
+let score = 0;
+let timer2Interval = null;
+let timer1Interval = null;
+let timer2Value = 0;
+let gameRunning = false;
+
+function disableButtons(state) {
+    document.querySelectorAll(".orange-btn").forEach(btn => {
+        btn.disabled = state;
+        btn.style.opacity = state ? "0.4" : "1";
+    });
+}
+
+async function handleButtonClick() {
+    score += 1;
+    document.getElementById("score").textContent = score;
+}
+
+// MULTITOUCH: click + touchstart
+document.querySelectorAll(".orange-btn").forEach(btn => {
+    btn.addEventListener("click", async () => await handleButtonClick());
+    btn.addEventListener("touchstart", async () => await handleButtonClick());
+});
+
+// Disattiva i tasti all'avvio
+disableButtons(true);
+
+const startBtn = document.getElementById("startBtn");
+
+startBtn.addEventListener("click", () => {
+
+    // STOP → reset
+    if (gameRunning) {
+        clearInterval(timer1Interval);
+        clearInterval(timer2Interval);
+
+        score = 0;
+        timer2Value = 0;
+
+        document.getElementById("score").textContent = 0;
+        document.getElementById("timer2").textContent = 0;
+        document.getElementById("timer1").textContent = "";
+
+        disableButtons(true);
+
+        gameRunning = false;
+        startBtn.textContent = "START";
+        return;
+    }
+
+    // START → timer1
+    score = 0;
+    timer2Value = 0;
+    document.getElementById("score").textContent = 0;
+    document.getElementById("timer2").textContent = 0;
+    document.getElementById("timer1").textContent = "";
+
+    disableButtons(true);
+
+    // Disattiva START durante timer1
+    startBtn.disabled = true;
+
+    let t1 = 3;
+    document.getElementById("timer1").textContent = "Timer1: " + t1;
+
+    timer1Interval = setInterval(() => {
+        t1--;
+        document.getElementById("timer1").textContent = "Timer1: " + t1;
+
+        if (t1 <= 0) {
+            clearInterval(timer1Interval);
+            document.getElementById("timer1").textContent = "";
+
+            disableButtons(false);
+
+            startTimer2();
+
+            gameRunning = true;
+            startBtn.textContent = "STOP";
+
+            // Riattiva START (ora STOP)
+            startBtn.disabled = false;
+        }
+    }, 1000);
+});
+
+function startTimer2() {
+    timer2Interval = setInterval(() => {
+        timer2Value++;
+        document.getElementById("timer2").textContent = timer2Value;
+
+        if (timer2Value >= 30) {
+            clearInterval(timer2Interval);
+            disableButtons(true);
+        }
+    }, 1000);
+}
+</script>
+
+</body>
+</html>
